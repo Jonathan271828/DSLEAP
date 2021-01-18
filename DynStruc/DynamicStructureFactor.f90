@@ -698,8 +698,6 @@ End Module QgridCollection
 
    use CrossCorrComplex, only :CrossCorrVar
    use SplitCelltoBox , only :BoxList
-   use QgridCollection
-   use PhononHelperRoutines
    Implicit None
    Type PVACFVar 
      Real*8,allocatable,dimension( : , : )  ::QgridDir                  !!! Qgrid in direct coordinates
@@ -737,8 +735,13 @@ End Module QgridCollection
      Subroutine ComputePVACFInit( data , Nsteps , dt , Nx , Ny , Nz , atoms , lattice , fname )
 
        use FlagReader, only :ReadFlags
-       use tool_interfaces, only :get_norm
        use CrossCorrComplex, only :CrossCorrelationInit
+       use PhononHelperRoutines , only :GetMasses,&
+                                        ReadEigenVectorsModeC,&
+                                        MakeDiagonalBasis,&
+                                        ReadQpointsFromFile
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+
        Implicit None
        Type( PVACFVar ) ::data
        Integer ::NSteps
@@ -881,74 +884,6 @@ End Module QgridCollection
      End Subroutine ReadBoxList
 
 
-
-
-     Subroutine MakeUnitCells( data , N1 , N2 , N3 , atoms )
-
-       use SplitCelltoBox, only :MakeBoxes,MakeBoxList
-       Implicit None
-       Type( PVACFVar ) ::data
-       Integer ::N1
-       Integer ::N2
-       Integer ::N3
-       Real*8,dimension( : , : )  ::atoms
-
-       Real*8,allocatable,dimension( : , : )  ::Boxes
-
-       Integer ::i
-       Integer ::j
-
-       Integer ::Npc
-
-
-
-
-       !!! make this more appropriate but for
-       !!! now it is working for the cubic cell
-       Boxes = MakeBoxes( N1 , N2 , N3 )
-       Boxes = Boxes - 0.001d0
-
-       data%LinkUC = MakeBoxList( Boxes , atoms )
-
-       !!! compute number of atoms per unit cell
-       Npc = Size( atoms , 2 ) / ( N1 * N2 * N3 )
-
-       !!! check if everything went correct
-       If ( .not. all( data%LinkUC( : )%Natoms .eq. Npc ) ) then
-         Do i = 1 , Size( data%LinkUC , 1 )
-            If ( data%LinkUC( i )%NAtoms .ne. Npc ) then
-                Write( * , * ) i,       data%LinkUC( i )%NAtoms
-                Write( * , * ) Boxes( 1:2 , i )
-                Write( * , * ) Boxes( 3:4 , i )
-                Write( * , * ) Boxes( 5:6 , i )
-                Do j = 1 , data%LinkUC( i )%Natoms
-                   Write( * , * ) data%LinkUC( i )%List( j ) , atoms( : , data%LinkUC( i )%List( j ) )
-                End Do
-                Write( * , * ) "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-            End If
-         End Do
-         Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-         Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-         Write( * , * ) "This code only has a very limited way to compute"
-         Write( * , * ) "the unit cells. In your case this routine failed"
-         Write( * , * ) "I am sorry for that. You could put a high symmetric"
-         Write( * , * ) "structure as the first entry of the structure file" 
-         Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-         Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-         STOP
-       End If
-
-       Allocate( data%Velocity( 1:3 , 1:NPc , 1:N1*N2*N3 ) )
-       Allocate( data%Boxes( 1:3 , 1 : N1 * N2 * N3 ) )
-       Do i = 1 , Size( data%Boxes , 2 )
-          data%Boxes( 1 , i )  =  0.5d0 * ( Boxes( 1 , i ) + Boxes( 2 , i ) )
-          data%Boxes( 2 , i )  =  0.5d0 * ( Boxes( 3 , i ) + Boxes( 4 , i ) )
-          data%Boxes( 3 , i )  =  0.5d0 * ( Boxes( 5 , i ) + Boxes( 6 , i ) )
-       End Do
-       
-     End Subroutine MakeUnitCells
-
-
      Subroutine ComputeVelocity( data , PosNew , lattice )
 
        use tool_interfaces, only :get_nearest_image,get_norm,&
@@ -986,7 +921,6 @@ End Module QgridCollection
      Subroutine ComputePVACFMain( data , atoms , lattice )
 
        use tool_interfaces, only:get_nearest_image,get_norm
-       use Binning , only :get_bin
        use CrossCorrComplex, only :CrossCorrelationMain
        Implicit None
        Type( PVACFVar ) ::data
@@ -1049,26 +983,6 @@ End Module QgridCollection
        data%ActStep =  data%ActStep + 1
 
      End Subroutine ComputePVACFMain
-
-     Subroutine CheckMemory( A , B )
-
-        Implicit None
-        Complex*16,allocatable,dimension( : , : ) ::A
-        Complex*16,allocatable,dimension( : , : ) ::B
-        Integer ::i
-        Integer ::j
-
-        Do i = 1 , Size( B , 2 )
-          Do j = 1, Size( A , 1 )
-             if ( Loc( A( i , j ) ) == Loc( B( i , j ) ) ) then
-                print*,"Problem"
-             End If
-          End Do
-        End Do
-
-     End Subroutine CheckMemory
-
-
 
 
      Subroutine ComputePVACFFinalize( data , fname )
@@ -1191,8 +1105,6 @@ End Module QgridCollection
 
    use CrossCorrComplexND, only :CrossCorrVarND
    use SplitCelltoBox , only :BoxList
-   use QgridCollection
-   use PhononHelperRoutines
    Implicit None
    Type PVACFVarKProj 
      Real*8,allocatable,dimension( : , : )  ::QgridDir                  !!! Qgrid in direct coordinates
@@ -1228,6 +1140,10 @@ End Module QgridCollection
        use FlagReader, only :ReadFlags
        use tool_interfaces, only :get_norm
        use CrossCorrComplexND, only :CrossCorrelationInitND
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use PhononHelperRoutines, only :GetMasses,&
+                                       ReadQpointsFromFile
+
        Implicit None
        Type( PVACFVarKProj ) ::data
        Integer ::NSteps
@@ -1356,70 +1272,7 @@ End Module QgridCollection
 
      End Subroutine ReadBoxList
          
-     Subroutine MakeUnitCells( data , N1 , N2 , N3 , atoms )
 
-        use SplitCelltoBox, only :MakeBoxes,MakeBoxList
-        Implicit None
-        Type( PVACFVarKProj ) ::data
-        Integer ::N1
-        Integer ::N2
-        Integer ::N3
-        Real*8,dimension( : , : )  ::atoms
-
-        Real*8,allocatable,dimension( : , : )  ::Boxes
-
-        Integer ::i
-        Integer ::j
-
-        Integer ::Npc
-
-
-
-
-        !!! make this more appropriate but for
-        !!! now it is working for the cubic cell
-        Boxes = MakeBoxes( N1 , N2 , N3 )
-        Boxes = Boxes - 0.001d0
-
-        data%LinkUC = MakeBoxList( Boxes , atoms )
-
-        !!! compute number of atoms per unit cell
-        Npc = Size( atoms , 2 ) / ( N1 * N2 * N3 )
-
-        !!! check if everything went correct
-        If ( .not. all( data%LinkUC( : )%Natoms .eq. Npc ) ) then
-          Do i = 1 , Size( data%LinkUC , 1 )
-             If ( data%LinkUC( i )%NAtoms .ne. Npc ) then
-                 Write( * , * ) i,       data%LinkUC( i )%NAtoms
-                 Write( * , * ) Boxes( 1:2 , i )
-                 Write( * , * ) Boxes( 3:4 , i )
-                 Write( * , * ) Boxes( 5:6 , i )
-                 Do j = 1 , data%LinkUC( i )%Natoms
-                    Write( * , * ) data%LinkUC( i )%List( j ) , atoms( : , data%LinkUC( i )%List( j ) )
-                 End Do
-                 Write( * , * ) "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-             End If
-          End Do
-          Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "This code only has a very limited way to compute"
-          Write( * , * ) "the unit cells. In your case this routine failed"
-          Write( * , * ) "I am sorry for that. You could put a high symmetric"
-          Write( * , * ) "structure as the first entry of the structure file" 
-          Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          STOP
-        End If
-
-        Allocate( data%Velocity( 1:3 , 1:NPc , 1:N1*N2*N3 ) )
-        Allocate( data%Boxes( 1:3 , 1 : N1 * N2 * N3 ) )
-        Do i = 1 , Size( data%Boxes , 2 )
-           data%Boxes( 1 , i )  =  0.5d0 * ( Boxes( 1 , i ) + Boxes( 2 , i ) )
-           data%Boxes( 2 , i )  =  0.5d0 * ( Boxes( 3 , i ) + Boxes( 4 , i ) )
-           data%Boxes( 3 , i )  =  0.5d0 * ( Boxes( 5 , i ) + Boxes( 6 , i ) )
-        End Do
-        
-     End Subroutine MakeUnitCells
 
      Subroutine ComputeVelocity( data , PosNew , lattice )
 
@@ -1457,7 +1310,6 @@ End Module QgridCollection
      Subroutine ComputePVACFMainKProjOnly( data , atoms , lattice )
 
        use tool_interfaces, only:get_nearest_image,get_norm
-       use Binning , only :get_bin
        use CrossCorrComplexND, only :CrossCorrelationMainND
        Implicit None
        Type( PVACFVarKProj ) ::data
@@ -1661,7 +1513,7 @@ End Module QgridCollection
 
        use FlagReader, only :ReadFlags
        use CrossCorrComplex, only :CrossCorrelationInit
-       use QgridCollection
+       use QgridCollection , only :SampleFirstBrillouinZoneCubic
        use PhononHelperRoutines, only :ReadQpointsFromFile
        Implicit None
        Type( DynStrucVar ) ::data
@@ -1740,7 +1592,6 @@ End Module QgridCollection
      Subroutine ComputeDynamicStructureFactorMain( data , atoms , lattice )
 
        use tool_interfaces, only:get_nearest_image,get_norm
-       use Binning , only :get_bin
        use CrossCorrComplex, only :CrossCorrelationMain
        Implicit None
        Type( DynStrucVar ) ::data
@@ -1894,8 +1745,6 @@ End Module QgridCollection
 
    use CrossCorrComplex, only :CrossCorrVar
    use SplitCelltoBox , only :BoxList
-   use QgridCollection
-   use PhononHelperRoutines
    Implicit None
    Type ProjDynFacVar 
      Real*8,allocatable,dimension( : , : )  ::QgridDir                  !!! Qgrid in direct coordinates
@@ -1914,7 +1763,6 @@ End Module QgridCollection
      Type( CrossCorrVar ) ::TimeCorrelation
      Logical ::TimeCorrOnOff
      Integer ::Natoms
-     Logical ::RotateCell   !! enables sqrt2 representation for a cubic cell
 
      !!! projected stuff
      Real*8,allocatable,dimension( : , : , : , : )  ::BasisVectors
@@ -1935,8 +1783,15 @@ End Module QgridCollection
                                  Ny , Nz , atoms , lattice , fname )
 
        use FlagReader, only :ReadFlags
-       use tool_interfaces, only :get_norm
        use CrossCorrComplex, only :CrossCorrelationInit
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use PhononHelperRoutines, only :GetMasses,&
+                                       ReadEigenvectorsModeC,&
+                                       MakeDiagonalBasis,&
+                                       ReadQpointsFromFile
+
+
+
        Implicit None
        Type( ProjDynFacVar ) ::data
        Integer ::NSteps
@@ -2079,70 +1934,6 @@ End Module QgridCollection
 
      End Subroutine ReadBoxList
          
-     Subroutine MakeUnitCells( data , N1 , N2 , N3 , atoms )
-
-        use SplitCelltoBox, only :MakeBoxes,MakeBoxList
-        Implicit None
-        Type( ProjDynFacVar ) ::data
-        Integer ::N1
-        Integer ::N2
-        Integer ::N3
-        Real*8,dimension( : , : )  ::atoms
-
-        Real*8,allocatable,dimension( : , : )  ::Boxes
-
-        Integer ::i
-        Integer ::j
-
-        Integer ::Npc
-
-
-
-
-        !!! make this more appropriate but for
-        !!! now it is working for the cubic cell
-        Boxes = MakeBoxes( N1 , N2 , N3 )
-        Boxes = Boxes - 0.001d0
-
-        data%LinkUC = MakeBoxList( Boxes , atoms )
-
-        !!! compute number of atoms per unit cell
-        Npc = Size( atoms , 2 ) / ( N1 * N2 * N3 )
-
-        !!! check if everything went correct
-        If ( .not. all( data%LinkUC( : )%Natoms .eq. Npc ) ) then
-          Do i = 1 , Size( data%LinkUC , 1 )
-             If ( data%LinkUC( i )%NAtoms .ne. Npc ) then
-                 Write( * , * ) i,       data%LinkUC( i )%NAtoms
-                 Write( * , * ) Boxes( 1:2 , i )
-                 Write( * , * ) Boxes( 3:4 , i )
-                 Write( * , * ) Boxes( 5:6 , i )
-                 Do j = 1 , data%LinkUC( i )%Natoms
-                    Write( * , * ) data%LinkUC( i )%List( j ) , atoms( : , data%LinkUC( i )%List( j ) )
-                 End Do
-                 Write( * , * ) "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-             End If
-          End Do
-          Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "This code only has a very limited way to compute"
-          Write( * , * ) "the unit cells. In your case this routine failed"
-          Write( * , * ) "I am sorry for that. You could put a high symmetric"
-          Write( * , * ) "structure as the first entry of the structure file" 
-          Write( * , * ) "!!!!!!!!!!!!!!!!!ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          Write( * , * ) "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          STOP
-        End If
-
-        Allocate( data%Velocity( 1:3 , 1:NPc , 1:N1*N2*N3 ) )
-        Allocate( data%Boxes( 1:3 , 1 : N1 * N2 * N3 ) )
-        Do i = 1 , Size( data%Boxes , 2 )
-           data%Boxes( 1 , i )  =  0.5d0 * ( Boxes( 1 , i ) + Boxes( 2 , i ) )
-           data%Boxes( 2 , i )  =  0.5d0 * ( Boxes( 3 , i ) + Boxes( 4 , i ) )
-           data%Boxes( 3 , i )  =  0.5d0 * ( Boxes( 5 , i ) + Boxes( 6 , i ) )
-        End Do
-        
-     End Subroutine MakeUnitCells
 
 
      !!
@@ -2155,7 +1946,6 @@ End Module QgridCollection
      Subroutine ComputeProjectedDynamicStructureFactorMain( data , atoms , lattice )
 
        use tool_interfaces, only:get_nearest_image,get_norm
-       use Binning , only :get_bin
        use CrossCorrComplex, only :CrossCorrelationMain
        Implicit None
        Type( ProjDynFacVar ) ::data
