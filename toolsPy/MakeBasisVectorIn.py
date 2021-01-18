@@ -55,6 +55,9 @@ def ExtractEigenVectors( fname ):
 
 
 def ExtractQpositions( fname ):
+    """
+    extracting all q-vectors of phonopy
+    """
     qPos = []
     with open( fname , 'r' ) as stream:
         data = yaml.safe_load( stream )
@@ -93,6 +96,16 @@ class LoadEigenVectors:
     Nz          --> contains the number of replicated uni cells in z
     """
     def __init__( self , fnamePhono , Nx , Ny , Nz ):
+        if ( fnamePhono == None ):
+            print( "No phonopy band.yaml file supplied" )
+            print( "please supply the name with -yaml FileName" )
+            sys.exit()
+        if ( Nx == None or Ny == None or Nz == None ):
+            print( "No cell dimensions are given" )
+            print( "Please supply with -Nx [number of cells in x] " )
+            print( "Please supply with -Ny [number of cells in y] " )
+            print( "Please supply with -Nz [number of cells in z] " )
+            sys.exit()
         self.Phonopy = ExtractEigenVectors( fnamePhono )
         self.Qpoints = ExtractQpositions( fnamePhono )
         self.NN = np.asarray( [ Nx , Ny , Nz ] )
@@ -107,7 +120,7 @@ class LoadEigenVectors:
 
     def WriteOutput( self ):
         """
-        Writing the output in the PC format
+        Writing the output in the DSLEAP format
         can be directly used as input
         """
         with open( "BasisVector.in" , "w" ) as outfile:
