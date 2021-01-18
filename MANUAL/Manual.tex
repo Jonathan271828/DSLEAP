@@ -99,13 +99,13 @@ The flags shown in table are specified in the \textbf{Phonon.in} file
 	DSTC   & time window for average correaltion functions & integer & NEND \\
 	DYNSTRUC & True/False switch on/off Dynamic structure factor & bool & False\\
 	PVACF   & on/off projected VACF on eigenvectors and $\mathbf{k}$-space & bool & False\\
-	PVACFKO & on/off projected VACF $\mathbf{k}$-space only & bool & False\\
+	PVACK & on/off projected VACF $\mathbf{k}$-space only & bool & False\\
 	PROJFAC & on/off projected DSF on eigenvectors & bool & False\\
  \hline
 \end{tabular}
 \end{table}
 
-Specifing one of the methods with DSTC, DYNSTRUC, PVACF, PVACFKO or PROJFAC requires
+Specifing one of the methods with DSTC, DYNSTRUC, PVACF, PVACK or PROJFAC requires
 different input files. The different methods and their usage will be described in the
 following sections. The code also supports openmp parallelization. If you do not want
 the program to use all your cores do export OMP\_NUM\_THREADS=\# of cores before execution.
@@ -132,7 +132,7 @@ time domain. The first column of the file is the time axis.
 
 \subsection{The velocity autocorrelation function in $\mathbf{k}$ space}
 To compute the $\mathbf{k}$ space projection of the velocity autocorrelation function
-set the flag PVACFKO=True. This method needs a masses.in file described
+set the flag PVACK=True. This method needs a masses.in file described
 in section \ref{MassFile}. The masses are needed for weighing the velocities properly.
 For this method the atoms have to be assigned to the unitcells
 in which they are located. This can be done with the BoxList.in file described in
