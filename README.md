@@ -1,2 +1,0 @@
-# DSLEAP
-computing lattice oscillations
