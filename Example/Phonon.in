@@ -1,0 +1,14 @@
+NSTART = 10000
+NEND   = 84999
+DSTEP  = 1
+TSTEP  = 2.0
+NX     = 16
+NY     = 16
+NZ     = 16
+DSTC   = 40000
+
+
+#PVACF = True
+#PVACK = True
+#DYNSTRUC = True
+PROJFAC = True
