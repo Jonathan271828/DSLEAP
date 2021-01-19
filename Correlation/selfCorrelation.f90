@@ -82,8 +82,6 @@
         Implicit None
         Type( selfCorrVar ) ::data
         Real*8,dimension( : , : ) ::Vectors
-        !Integer,Save ::MDstep = 1
-        !Integer,Save ::NNStartConfs = 0
         Integer ::i
         Integer ::j
 
@@ -260,8 +258,6 @@
         Implicit None
         Type( selfCorrVar ) ::data
         Real*8,dimension( : , : ) ::Vectors
-        !Integer,Save ::MDstep = 1
-        !Integer,Save ::NNStartConfs = 0
         Integer ::i
         Integer ::j
 
@@ -445,8 +441,6 @@
         Implicit None
         Type( CrossCorrVar ) ::data
         Real*8,dimension( : ) ::Vectors
-        !Integer,Save ::MDstep = 1
-        !Integer,Save ::NNStartConfs = 0
         Integer ::i
 
 
@@ -615,8 +609,6 @@
         Complex*16,dimension( : ) ::Vectors
         Complex*16,optional,dimension( : ) ::VectorsB
         Real*8,optional :: Norm
-        !Integer,Save ::MDstep = 1
-        !Integer,Save ::NNStartConfs = 0
         Integer ::i
 
 
@@ -804,8 +796,6 @@
         Complex*16,dimension( : , : ) ::Vectors
         Complex*16,optional,dimension( : , : ) ::VectorsB
         Real*8,optional :: Norm
-        !Integer,Save ::MDstep = 1
-        !Integer,Save ::NNStartConfs = 0
         Integer ::i
         Integer ::j
 
@@ -1075,7 +1065,7 @@
              !!! I only write out the real part because I checked for several simulations
              !!! that the imaginary part is numerical noise for most of the computations
              !!! also if the imagianry part is not zero the crystal would not be stable
-             !!! this would be bullshit in an MD
+             !!! this would not make sense in an MD
              Write( 3000000 , "(I10,300000F15.8)" ) i , ( ( Real( data%Average( j , k , i ) ) , &
                                                     j = 1, Size( data%Average , 1 ) ) ,&
                                                     k = 1, Size( data%Average , 2 ) ) 
