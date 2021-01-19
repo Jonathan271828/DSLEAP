@@ -28,6 +28,7 @@
           Integer ::Nstruc   !! actual structure to be analyzed
 
 
+          !!! file containing input flags
           InputFile = 'Phonon.in'
 
           !! open input parameter file and read data from it
@@ -57,6 +58,7 @@
           Do Nstruc = 1 , MDParameters%Nend
              If ( Nstruc .ge. MDParameters%Nstart .and. &
                    Modulo( Nstruc , MDParameters%BlockSample ) .eq. 0 ) then
+                   !! Call relevant phonon routines
                    Call PhononInterfaceMain( MDParameters , Atoms , &
                                              StrucReader%Lattice )
                    If ( Modulo( Nstruc , 10 ) .eq. 0 ) then
