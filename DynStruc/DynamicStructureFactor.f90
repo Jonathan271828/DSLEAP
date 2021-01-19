@@ -233,13 +233,11 @@ Module QgridCollection
 
 
        If ( Allocated( Qgrid ) ) Deallocate( Qgrid ); Allocate( Qgrid( 3 , col-1 ) )
-       !shift = 1d0
        Write( * , * ) "Qpoints"
        Do i = 1, col-1
          Qgrid( : , i ) = QgridTemp( : , i ) !+ shift
          Write( * , "(I4,3F15.8)" ) i,QgridTemp( : , i )
        End Do
-       !Qgrid = QgridTemp( : , 1:col-1 ) + shift
        Deallocate( QgridTemp )
      End Subroutine BrillouinZoneCubicGXMGRX
 
@@ -342,13 +340,11 @@ Module QgridCollection
 
 
        If ( Allocated( Qgrid ) ) Deallocate( Qgrid ); Allocate( Qgrid( 3 , col-1 ) )
-       !shift = 1d0
        Write( * , * ) "Qpoints"
        Do i = 1, col-1
          Qgrid( : , i ) = QgridTemp( : , i ) !+ shift
          Write( * , "(I4,3F15.8)" ) i,QgridTemp( : , i )
        End Do
-       !Qgrid = QgridTemp( : , 1:col-1 ) + shift
        Deallocate( QgridTemp )
 
      End Subroutine BrillouinZoneGXUZGS
@@ -487,10 +483,6 @@ End Module QgridCollection
 
            Do i = 1 , NQgrid
               BasisVectors( : , : , : , i )  =  TempVectors
-           !   Do j = 1, N1
-           !     print*,BasisVectors( : , j , 1 , i )
-           !   End Do
-           !   print*,
            End Do
            
 
@@ -529,6 +521,7 @@ End Module QgridCollection
                End Do
                Read( 31 , * )
             End Do
+            close( 31 )
 
 
          End Subroutine ReadEigenVectorsModeB
