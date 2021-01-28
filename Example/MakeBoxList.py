@@ -39,7 +39,7 @@ class CreateBoxListMonoAtom:
         """
          with open( "BoxList.in" , "w" ) as outfile:
              for i in range( self.N ):
-                 outfile.write( "  " + str( i ) + "\n" )
+                 outfile.write( "  " + str( self.BoxList[i] ) + "\n" )
 
 
 
