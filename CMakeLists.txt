@@ -3,7 +3,7 @@
 
 
 
-project(PC Fortran)
+project(DSLEAP Fortran)
 
 #enable_language(Fortran)
 SET(CMAKE_FC_COMPILE_NAME gfortran)
@@ -84,9 +84,9 @@ add_dependencies(DynStruc
 
 
 
-add_executable(PC main.f90)
+add_executable(DSLEAP main.f90)
 
-target_link_libraries(PC
+target_link_libraries(DSLEAP
 	DynStruc
 	ReadInputFiles
 	StructureReader
