@@ -37,7 +37,7 @@ class CreateBoxListMonoAtom:
         In every unit cell there is only a single atom
         therefore there is a single number per line
         """
-         with open( "BoxList.in" , "w" ) as outfile:
+        with open( "BoxList.in" , "w" ) as outfile:
              for i in range( self.N ):
                  outfile.write( "  " + str( self.BoxList[i] ) + "\n" )
 
