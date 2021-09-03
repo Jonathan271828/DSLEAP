@@ -151,6 +151,7 @@
 
 
                   !!! checking filter function
+                  !!! filter function is an exp(-K*x)
                   data%FilterFunction  =  .False.
                   Call ReadFlags( "FILTER" , data%FilterFunction&
                                            , fname )
