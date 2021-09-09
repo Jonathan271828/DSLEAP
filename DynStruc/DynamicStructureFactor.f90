@@ -5,7 +5,7 @@
 !!!
 !!!
 
-Module QgridCollection
+ Module QgridCollection
   
 
   Implicit None
@@ -368,7 +368,37 @@ Module QgridCollection
      End Subroutine ComputeCartesianQgrid
 
 
-End Module QgridCollection
+
+     Subroutine RescaleQGrid( QGrid , Nx , Ny , Nz )
+
+        Implicit None
+
+        Real*8,allocatable,dimension( : , : )  ::QGrid
+        Integer  ::Nx
+        Integer  ::Ny
+        Integer  ::Nz
+
+        Integer ::i
+        Real*8,parameter ::PI2 = 4d0 * Dacos( 0d0 )     !!! factor 2pi
+        Real*8   ::factor1
+        Real*8   ::factor2
+        Real*8   ::factor3
+
+
+        factor1  =  PI2  *  Dble( Nx )
+        factor2  =  PI2  *  Dble( Ny )
+        factor3  =  PI2  *  Dble( Nz )
+
+        Do i = 1, Size( QGrid , 2 )
+           QGrid( 1 , i )  = QGrid( 1 , i ) * factor1 
+           QGrid( 2 , i )  = QGrid( 2 , i ) * factor2 
+           QGrid( 3 , i )  = QGrid( 3 , i ) * factor3 
+        End Do
+
+     End Subroutine RescaleQGrid
+
+
+ End Module QgridCollection
 
 
  Module PhononHelperRoutines
@@ -761,7 +791,7 @@ End Module QgridCollection
                                         ReadEigenVectorsModeC,&
                                         MakeDiagonalBasis,&
                                         ReadQpointsFromFile
-       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic,RescaleQGrid
 
        Implicit None
        Type( PVACFVar ) ::data
@@ -835,7 +865,8 @@ End Module QgridCollection
        !!
        !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-       data%QgridDir = PI2 * data%QgridDir
+       Call RescaleQGrid( data%QgridDir , Nx , Ny , Nz )
+
        data%PosOld = atoms
        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        
@@ -1172,7 +1203,8 @@ End Module QgridCollection
        use FlagReader, only :ReadFlags
        use tool_interfaces, only :get_norm
        use CrossCorrComplexND, only :CrossCorrelationInitND
-       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic,&
+                                  RescaleQGrid
        use PhononHelperRoutines, only :GetMasses,&
                                        ReadQpointsFromFile
 
@@ -1229,7 +1261,7 @@ End Module QgridCollection
        End If
 
 
-       data%QgridDir = PI2 * data%QgridDir 
+       Call RescaleQGrid( data%QgridDir , Nx , Ny , Nz )
        data%PosOld  =  atoms
        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        
@@ -1558,7 +1590,8 @@ End Module QgridCollection
 
        use FlagReader, only :ReadFlags
        use CrossCorrComplex, only :CrossCorrelationInit
-       use QgridCollection , only :SampleFirstBrillouinZoneCubic
+       use QgridCollection , only :SampleFirstBrillouinZoneCubic,&
+                                   RescaleQGrid
        use PhononHelperRoutines, only :ReadQpointsFromFile,&
                                        ReadScatteringLengths
        Implicit None
@@ -1621,8 +1654,8 @@ End Module QgridCollection
                          1:Size( Atoms , 2 ) / ( Nx * Ny * Nz ) ) )
        End If
 
-       data%QgridDir = PI2 * data%QgridDir
 
+       Call RescaleQGrid( data%QgridDir , Nx , Ny , Nz )
 
        data%TimeCorrOnOff = .True.
        !! supply window size
@@ -1702,12 +1735,10 @@ End Module QgridCollection
        Real*8,dimension( : , : )  ::lattice
        Integer ::qq
        Integer ::i
-       Integer ::k
        Real*8 ::dpx
        Real*8 ::dpy
        Real*8 ::dpz
        Real*8 ::Dotp
-       Integer ::AIndx
 
        Complex*16,allocatable,dimension( : )  ::P
 
@@ -1916,7 +1947,8 @@ End Module QgridCollection
 
        use FlagReader, only :ReadFlags
        use CrossCorrComplex, only :CrossCorrelationInit
-       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic,&
+                                  RescaleQGrid
        use PhononHelperRoutines, only :GetMasses,&
                                        ReadEigenvectorsModeC,&
                                        MakeDiagonalBasis,&
@@ -1994,7 +2026,8 @@ End Module QgridCollection
        !!
        !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-       data%QgridDir = PI2 * data%QgridDir
+       !data%QgridDir = PI2 * data%QgridDir
+       Call RescaleQGrid( data%QgridDir , Nx , Ny , Nz )
        !! projected dynamic structure factor
        data%PosOld = atoms
        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2328,7 +2361,8 @@ End Module QgridCollection
 
        use FlagReader, only :ReadFlags
        use CrossCorrComplex, only :CrossCorrelationInit
-       use QgridCollection, only :SampleFirstBrillouinZoneCubic
+       use QgridCollection, only :SampleFirstBrillouinZoneCubic,&
+                                  RescaleQGrid
        use PhononHelperRoutines, only :GetMasses,&
                                        ReadEigenvectorsModeC,&
                                        MakeDiagonalBasis,&
@@ -2351,7 +2385,6 @@ End Module QgridCollection
 
        Logical ::QFound
        Real*8  ::temp
-       Integer ::i
 
        Type( Input ) ::Equi
        Logical       ::EquiFound
@@ -2410,7 +2443,7 @@ End Module QgridCollection
        !!
        !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-       data%QgridDir = PI2 * data%QgridDir
+       Call RescaleQGrid( data%QgridDir , Nx , Ny , Nz )
        !! projected dynamic structure factor
 
        Equi%fname  =  "EquiPos.in"
@@ -2602,13 +2635,11 @@ End Module QgridCollection
        Implicit None
        Type( SinglePhononVar ) ::data
        Character( len = * ) ::fname
-       Character( len = 3 ) ::fnum
        Complex*16,allocatable,dimension( : , : ) ::FourierArray
 
        Integer ::N2
        Integer ::qq
        Integer ::i
-       Integer ::j
        Real*8 ::deltaFrequ
        Real*8 ::Qpath
 
@@ -2847,6 +2878,7 @@ End Module QgridCollection
    End Subroutine PhononInterfaceMain
 
 
+
    Subroutine PrepareAtoms( atoms )
 
      use ReadingInput, only:atom_type
@@ -2864,6 +2896,8 @@ End Module QgridCollection
        End Do
      End Do
    End Subroutine PrepareAtoms
+
+
 
    Subroutine PhononInterfaceFinal
 
