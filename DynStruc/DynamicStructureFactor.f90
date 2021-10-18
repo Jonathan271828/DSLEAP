@@ -1009,18 +1009,19 @@
        !$OMP Parallel Do Private(qq,j,i,k,indx,dpx,dpy,dpz,Dotp) Shared(atoms,data) &
        !$OMP& Reduction (+:Proj)
        Do qq = 1 , data%Nqgrid
+         !!!loop over branches
          Do j = 1 , Size( data%BasisVectors , 3 )
             !!looping over unit cells
             Do i = 1 , Size( data%LinkUC , 1 )
                !!! looping over atoms in unit cell
                Do k = 1, Size( data%BasisVectors , 2 )
                   Indx =  data%LinkUC( i )%List( k )
-                  dpx  =  data%QgridDir( 1 , qq ) * atoms( 1 , Indx ) 
-                  dpy  =  data%QgridDir( 2 , qq ) * atoms( 2 , Indx ) 
-                  dpz  =  data%QgridDir( 3 , qq ) * atoms( 3 , Indx ) 
-                  !dpx  =  data%QgridDir( 1 , qq ) * data%Boxes( 1 , i )
-                  !dpy  =  data%QgridDir( 2 , qq ) * data%Boxes( 2 , i )
-                  !dpz  =  data%QgridDir( 3 , qq ) * data%Boxes( 3 , i )
+                  !dpx  =  data%QgridDir( 1 , qq ) * atoms( 1 , Indx ) 
+                  !dpy  =  data%QgridDir( 2 , qq ) * atoms( 2 , Indx ) 
+                  !dpz  =  data%QgridDir( 3 , qq ) * atoms( 3 , Indx ) 
+                  dpx  =  data%QgridDir( 1 , qq ) * data%Boxes( 1 , i )
+                  dpy  =  data%QgridDir( 2 , qq ) * data%Boxes( 2 , i )
+                  dpz  =  data%QgridDir( 3 , qq ) * data%Boxes( 3 , i )
                   Dotp = dpx + dpy + dpz
                   Proj( qq , j )  =  Proj( qq , j ) + &
                               Dot_product( data%BasisVectors( : , k , j , qq ) , &
