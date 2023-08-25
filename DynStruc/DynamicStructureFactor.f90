@@ -590,9 +590,9 @@
                        Do atom = 1 , Size( BasisVectors , 2 )
                            Read( 31 , * )  BasisVectors( : , atom , branch , qq )
                        End Do
-                       Read( 31 , * )
+                       If ( qq .ne. Size( BasisVectors , 4 ) ) Read( 31 , * )
                     End Do
-                    Read( 31 , * )
+                    If ( qq .ne. Size( BasisVectors , 4 ) ) Read( 31 , * )
                  End Do
                  close( 31 )
          End Subroutine ReadEigenVectorsModeC
